@@ -1,11 +1,235 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>我的第一个 GitHub Pages 页面</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Voice Conversion Demo</title>
+<style>
+  :root{
+    --page-w: 1100px;
+    --gap: 20px;
+    --card-bg: rgba(255,255,255,.85);
+    --border: rgba(200,200,200,.8);
+    --main-color: #50aead;
+  }
+
+  html,body{
+    height:100%;
+    margin:0;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+    background: transparent;
+    color:var(--main-color);
+    overflow-y:auto;
+  }
+
+  /* ===== Background ===== */
+  .gradient{
+    position:fixed; inset:0; z-index:0;
+    background:#ffffff;
+  }
+  .gradient::after{
+    content:""; position:absolute; inset:-20%;
+    filter:blur(140px) saturate(120%);
+    background:conic-gradient(from 0deg,
+      rgba(59,130,246,.25),
+      rgba(168,85,247,.25),
+      rgba(16,185,129,.25),
+      rgba(245,158,11,.25),
+      rgba(59,130,246,.25));
+    animation:spin 20s linear infinite;
+  }
+  @keyframes spin{ to{ transform:rotate(360deg) } }
+  #bg-canvas{
+    position:fixed; inset:0; z-index:1; pointer-events:none;
+  }
+
+  /* ===== Foreground ===== */
+  .page{ max-width:var(--page-w); margin:32px auto; padding:0 16px; position:relative; z-index:2; }
+  .title{ text-align:center; margin:0 0 24px; text-shadow:0 6px 22px rgba(0,0,0,.1); }
+
+  .main-title {
+    text-align:center;
+    font-size:36px;
+    font-weight:bold;
+    margin-bottom:30px;
+    color:var(--main-color);
+    text-shadow:0 4px 12px rgba(0,0,0,.15);
+  }
+
+  .module{
+    background:var(--card-bg);
+    border:1px solid var(--border);
+    border-radius:16px;
+    padding:18px; margin-bottom:28px;
+    box-shadow:0 10px 25px rgba(0,0,0,.08);
+    backdrop-filter:saturate(140%) blur(8px);
+    color:var(--main-color);
+  }
+  .module h2{ text-align:center; margin:6px 0 16px; }
+  .grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:var(--gap); }
+  .col{
+    background:#fff; border:1px solid var(--border);
+    border-radius:12px; padding:14px; box-shadow:0 6px 16px rgba(0,0,0,.05);
+    color:var(--main-color);
+  }
+  .col h3{ margin:0 0 10px; font-size:16px; }
+  select{ width:100%; padding:8px 10px; border:1px solid var(--border); border-radius:10px; background:#fff; margin-bottom:10px; font-size:14px; color:#333; }
+  audio{ width:100%; }
+
+  @media (max-width:900px){
+    .grid{ grid-template-columns:1fr; }
+    .page{ margin:16px auto; }
+  }
+</style>
 </head>
 <body>
-  <h1>你好，世界！</h1>
-  <p>这是我用 GitHub Pages 搭建的第一个网站。</p>
+  <!-- Background -->
+  <div class="gradient" aria-hidden="true"></div>
+  <canvas id="bg-canvas" aria-hidden="true"></canvas>
+
+  <!-- Foreground -->
+  <div class="page">
+    <!-- Main Title -->
+    <h1 class="main-title">
+      Disentangled Speech Representation Learning with Binary Contrastive Loss: Improving Speaker Consistency in Voice Conversion
+    </h1>
+
+    <h2 class="title">Voice Conversion Comparison Demo</h2>
+
+    <!-- Module 1 -->
+    <section class="module" id="speechtripnet">
+      <h2>SpeechTripNet</h2>
+      <div class="grid">
+        <div class="col">
+          <h3>Source Speaker</h3>
+          <select id="stnSourceSelect">
+            <option value="https://interactive-examples.mdn.mozilla.net/media/cc0-audio/t-rex-roar.mp3">speaker1-speech1</option>
+            <option value="https://interactive-examples.mdn.mozilla.net/media/examples/t-rex-roar.mp3">speaker1-speech2</option>
+            <option value="https://interactive-examples.mdn.mozilla.net/media/cc0-audio/t-rex-roar.mp3">speaker2-speech1</option>
+          </select>
+          <audio id="stnSourceAudio" controls></audio>
+        </div>
+        <div class="col">
+          <h3>Target Speaker</h3>
+          <select id="stnTargetSelect">
+            <option value="https://interactive-examples.mdn.mozilla.net/media/examples/t-rex-roar.mp3">speakerA-speech1</option>
+            <option value="https://interactive-examples.mdn.mozilla.net/media/cc0-audio/t-rex-roar.mp3">speakerA-speech2</option>
+            <option value="https://interactive-examples.mdn.mozilla.net/media/examples/t-rex-roar.mp3">speakerB-speech1</option>
+          </select>
+          <audio id="stnTargetAudio" controls></audio>
+        </div>
+        <div class="col">
+          <h3>Converted Speech</h3>
+          <audio id="stnConvertedAudio" controls></audio>
+        </div>
+      </div>
+    </section>
+
+    <!-- Module 2 -->
+    <section class="module" id="baseline">
+      <h2>Contrastive Model Results</h2>
+      <div class="grid">
+        <div class="col">
+          <h3>Source Speaker</h3>
+          <select id="baseSourceSelect">
+            <option value="https://interactive-examples.mdn.mozilla.net/media/examples/t-rex-roar.mp3">speaker1-speech1</option>
+            <option value="https://interactive-examples.mdn.mozilla.net/media/cc0-audio/t-rex-roar.mp3">speaker1-speech2</option>
+            <option value="https://interactive-examples.mdn.mozilla.net/media/examples/t-rex-roar.mp3">speaker2-speech1</option>
+          </select>
+          <audio id="baseSourceAudio" controls></audio>
+        </div>
+        <div class="col">
+          <h3>Target Speaker</h3>
+          <select id="baseTargetSelect">
+            <option value="https://interactive-examples.mdn.mozilla.net/media/cc0-audio/t-rex-roar.mp3">speakerA-speech1</option>
+            <option value="https://interactive-examples.mdn.mozilla.net/media/examples/t-rex-roar.mp3">speakerA-speech2</option>
+            <option value="https://interactive-examples.mdn.mozilla.net/media/cc0-audio/t-rex-roar.mp3">speakerB-speech1</option>
+          </select>
+          <audio id="baseTargetAudio" controls></audio>
+        </div>
+        <div class="col">
+          <h3>Converted Speech</h3>
+          <audio id="baseConvertedAudio" controls></audio>
+        </div>
+      </div>
+    </section>
+  </div>
+
+<script>
+/* ===== Particle Background ===== */
+(function(){
+  const c = document.getElementById('bg-canvas');
+  const ctx = c.getContext('2d');
+  let W,H,DPR, pts=[];
+  const N=70, SPD=0.35, LINK=140;
+
+  function resize(){
+    DPR = Math.min(devicePixelRatio||1,2);
+    W = c.width  = Math.floor(innerWidth * DPR);
+    H = c.height = Math.floor(innerHeight * DPR);
+    c.style.width  = innerWidth + 'px';
+    c.style.height = innerHeight + 'px';
+  }
+  function rnd(a,b){return a + Math.random()*(b-a)}
+  function init(){
+    const palette = ["59,130,246","168,85,247","16,185,129"];
+    pts = Array.from({length:N},()=>({
+      x:rnd(0,W), y:rnd(0,H),
+      vx:rnd(-SPD,SPD), vy:rnd(-SPD,SPD),
+      r:rnd(1.5,2.5)*DPR, a:rnd(.25,.55),
+      color: palette[Math.floor(Math.random()*palette.length)]
+    }));
+  }
+  function step(){
+    ctx.clearRect(0,0,W,H);
+    for(let i=0;i<pts.length;i++){
+      for(let j=i+1;j<pts.length;j++){
+        const a=pts[i], b=pts[j];
+        const dx=a.x-b.x, dy=a.y-b.y, d=Math.hypot(dx,dy);
+        if(d<LINK*DPR){
+          const alpha = 1 - d/(LINK*DPR);
+          ctx.strokeStyle = `rgba(120,120,120,${0.15*alpha})`;
+          ctx.lineWidth = 1;
+          ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.stroke();
+        }
+      }
+    }
+    for(const p of pts){
+      ctx.fillStyle = `rgba(${p.color},${p.a})`;
+      ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2); ctx.fill();
+      p.x += p.vx; p.y += p.vy;
+      if(p.x<0||p.x>W) p.vx *= -1;
+      if(p.y<0||p.y>H) p.vy *= -1;
+    }
+    requestAnimationFrame(step);
+  }
+  resize(); init(); step();
+  addEventListener('resize', ()=>{ resize(); });
+})();
+
+/* ===== Block Logic ===== */
+function setupBlock(prefix){
+  const sSel = document.getElementById(prefix+'SourceSelect');
+  const tSel = document.getElementById(prefix+'TargetSelect');
+  const sAud = document.getElementById(prefix+'SourceAudio');
+  const tAud = document.getElementById(prefix+'TargetAudio');
+  const cAud = document.getElementById(prefix+'ConvertedAudio');
+
+  function updateConverted(){
+    cAud.src = "https://interactive-examples.mdn.mozilla.net/media/cc0-audio/t-rex-roar.mp3";
+  }
+  function updateSrc(){ sAud.src = sSel.value; updateConverted(); }
+  function updateTgt(){ tAud.src = tSel.value; updateConverted(); }
+
+  sSel.addEventListener('change', updateSrc);
+  tSel.addEventListener('change', updateTgt);
+
+  sAud.src = sSel.value;
+  tAud.src = tSel.value;
+  updateConverted();
+}
+setupBlock('stn');
+setupBlock('base');
+</script>
 </body>
 </html>
