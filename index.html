@@ -47,6 +47,17 @@
   .page{ max-width:var(--page-w); margin:32px auto; padding:0 16px; position:relative; z-index:2; }
   .title{ text-align:center; margin:0 0 24px; text-shadow:0 6px 22px rgba(0,0,0,.1); }
 
+  /* --- logo --- */
+  .logo-wrap{
+    text-align:center;
+    margin-bottom:16px;
+  }
+  .logo{
+    max-width:400px;   /* 调整大小 */
+    height:auto;
+    display:inline-block;
+  }
+
   .main-title {
     text-align:center;
     font-size:36px;
@@ -79,6 +90,7 @@
   @media (max-width:900px){
     .grid{ grid-template-columns:1fr; }
     .page{ margin:16px auto; }
+    .logo{ max-width:120px; }
   }
 </style>
 </head>
@@ -89,6 +101,16 @@
 
   <!-- Foreground -->
   <div class="page">
+
+    <!-- School logo ABOVE the title -->
+    <div class="logo-wrap">
+      <!-- 用白底的： -->
+      <img src="TAB_col_white_background.png" alt="School Logo" class="logo">
+      <!-- 若想换另一张，注释上面一行，启用下面这一行：
+      <img src="TAB_col_background.png" alt="School Logo" class="logo">
+      -->
+    </div>
+
     <!-- Main Title -->
     <h1 class="main-title">
       Disentangled Speech Representation Learning with Binary Contrastive Loss: Improving Speaker Consistency in Voice Conversion
@@ -206,7 +228,7 @@
   resize(); init(); step();
   addEventListener('resize', ()=>{ resize(); });
 })();
-
+  
 /* ===== Block Logic ===== */
 function setupBlock(prefix){
   const sSel = document.getElementById(prefix+'SourceSelect');
