@@ -203,35 +203,28 @@
   addEventListener('resize', ()=>{ resize(); });
 })();
 
-/* ======= Load audio list from GitHub for SpeechTripNet (Source/Target) ======= */
+/* ======= Load audio list from GitHub for both blocks ======= */
 (async function loadGithubAudio(){
-  // 根据你的仓库设置owner/repo和目录
+  // 根据你的仓库设置 owner / repo / 目录
   const GH = {
     owner: 'orangecat1219',
     repo:  'Contractive-Speechtripnet',
     sourcePath: 'Data/source_speaker',
     targetPath: 'Data/target_speaker'
   };
-
-  // GitHub contents API
   const api = (path) =>
     `https://api.github.com/repos/${GH.owner}/${GH.repo}/contents/${encodeURIComponent(path)}`;
 
-  // 只接受这些音频格式
   const AUDIO_EXT = ['.wav','.mp3','.m4a','.flac','.ogg','.webm'];
-
-  // 工具：提取扩展名
   const ext = (name)=> name.slice(name.lastIndexOf('.')).toLowerCase();
   const isAudio = (name)=> AUDIO_EXT.includes(ext(name));
 
-  // 填充下拉框
   async function fillSelect(selectEl, apiPath){
     selectEl.innerHTML = '<option value="">Loading…</option>';
     try{
       const res = await fetch(apiPath, { headers: { 'Accept': 'application/vnd.github+json' }});
       if(!res.ok) throw new Error('GitHub API error: '+res.status);
       const items = await res.json();
-
       const files = items
         .filter(x => x.type === 'file' && isAudio(x.name))
         .map(x => ({ label: x.name, url: x.download_url }));
@@ -240,11 +233,7 @@
         selectEl.innerHTML = '<option value="">(No audio files found)</option>';
         return [];
       }
-
-      selectEl.innerHTML = files
-        .map(f => `<option value="${f.url}">${f.label}</option>`)
-        .join('');
-
+      selectEl.innerHTML = files.map(f => `<option value="${f.url}">${f.label}</option>`).join('');
       return files;
     }catch(err){
       console.error(err);
@@ -253,46 +242,38 @@
     }
   }
 
-  // 绑定播放器
-  const sSel = document.getElementById('stnSourceSelect');
-  const tSel = document.getElementById('stnTargetSelect');
-  const sAud = document.getElementById('stnSourceAudio');
-  const tAud = document.getElementById('stnTargetAudio');
-  const cAud = document.getElementById('stnConvertedAudio'); // 先不处理转换音频
+  // ---- SpeechTripNet block ----
+  const stn = {
+    sSel: document.getElementById('stnSourceSelect'),
+    tSel: document.getElementById('stnTargetSelect'),
+    sAud: document.getElementById('stnSourceAudio'),
+    tAud: document.getElementById('stnTargetAudio'),
+    cAud: document.getElementById('stnConvertedAudio')
+  };
+  await fillSelect(stn.sSel, api(GH.sourcePath));
+  await fillSelect(stn.tSel, api(GH.targetPath));
+  if (stn.sSel.value) stn.sAud.src = stn.sSel.value;
+  if (stn.tSel.value) stn.tAud.src = stn.tSel.value;
+  stn.sSel.addEventListener('change', ()=>{ stn.sAud.src = stn.sSel.value || ''; });
+  stn.tSel.addEventListener('change', ()=>{ stn.tAud.src = stn.tSel.value || ''; });
+  stn.cAud.src = ''; // converted 之后再映射
 
-  // 先加载 source/target 列表
-  await fillSelect(sSel, api(GH.sourcePath));
-  await fillSelect(tSel, api(GH.targetPath));
-
-  // 默认选中第一项并加载到播放器
-  if (sSel.value) sAud.src = sSel.value;
-  if (tSel.value) tAud.src = tSel.value;
-
-  sSel.addEventListener('change', ()=>{ sAud.src = sSel.value || ''; });
-  tSel.addEventListener('change', ()=>{ tAud.src = tSel.value || ''; });
-
-  // 转换结果先占位（之后我们再用你 converted_speech 的规则来映射）
-  cAud.src = '';
+  // ---- Contrastive Model block (baseline) ----
+  const base = {
+    sSel: document.getElementById('baseSourceSelect'),
+    tSel: document.getElementById('baseTargetSelect'),
+    sAud: document.getElementById('baseSourceAudio'),
+    tAud: document.getElementById('baseTargetAudio'),
+    cAud: document.getElementById('baseConvertedAudio')
+  };
+  await fillSelect(base.sSel, api(GH.sourcePath));
+  await fillSelect(base.tSel, api(GH.targetPath));
+  if (base.sSel.value) base.sAud.src = base.sSel.value;
+  if (base.tSel.value) base.tAud.src = base.tSel.value;
+  base.sSel.addEventListener('change', ()=>{ base.sAud.src = base.sSel.value || ''; });
+  base.tSel.addEventListener('change', ()=>{ base.tAud.src = base.tSel.value || ''; });
+  base.cAud.src = ''; // 先留空
 })();
-  
-/* ===== Baseline block (keep as is for now) ===== */
-function setupBlock(prefix){
-  const sSel = document.getElementById(prefix+'SourceSelect');
-  const tSel = document.getElementById(prefix+'TargetSelect');
-  const sAud = document.getElementById(prefix+'SourceAudio');
-  const tAud = document.getElementById(prefix+'TargetAudio');
-  const cAud = document.getElementById(prefix+'ConvertedAudio');
-
-  function updateConverted(){
-    cAud.src = ""; // placeholder
-  }
-  function updateSrc(){ if (sSel && sAud) { sAud.src = sSel.value; updateConverted(); } }
-  function updateTgt(){ if (tSel && tAud) { tAud.src = tSel.value; updateConverted(); } }
-
-  if (sSel) sSel.addEventListener('change', updateSrc);
-  if (tSel) tSel.addEventListener('change', updateTgt);
-}
-setupBlock('base');
 </script>
 </body>
 </html>
