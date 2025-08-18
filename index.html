@@ -22,7 +22,7 @@
     overflow-y:auto;
   }
 
-  /* ===== Background ===== */
+  /* ===== Background (soft colorful glow) ===== */
   .gradient{
     position:fixed; inset:0; z-index:0;
     background:#ffffff;
@@ -95,6 +95,7 @@
   <!-- Foreground -->
   <div class="page">
     <div class="logo-wrap">
+      <!-- 若需要换另一张，改成 TAB_col_background.png 或你的路径 -->
       <img src="TAB_col_white_background.png" alt="School Logo" class="logo">
     </div>
 
@@ -125,22 +126,18 @@
       </div>
     </section>
 
-    <!-- Module 2 (unchanged) -->
+    <!-- Module 2 -->
     <section class="module" id="baseline">
       <h2>Contrastive Model Results</h2>
       <div class="grid">
         <div class="col">
           <h3>Source Speaker</h3>
-          <select id="baseSourceSelect">
-            <option>— keep as is for now —</option>
-          </select>
+          <select id="baseSourceSelect"></select>
           <audio id="baseSourceAudio" controls></audio>
         </div>
         <div class="col">
           <h3>Target Speaker</h3>
-          <select id="baseTargetSelect">
-            <option>— keep as is for now —</option>
-          </select>
+          <select id="baseTargetSelect"></select>
           <audio id="baseTargetAudio" controls></audio>
         </div>
         <div class="col">
@@ -152,7 +149,7 @@
   </div>
 
 <script>
-/* ===== Particle Background (unchanged) ===== */
+/* ===== Particle background (fixed) ===== */
 (function(){
   const c = document.getElementById('bg-canvas');
   const ctx = c.getContext('2d');
@@ -181,7 +178,8 @@
     for(let i=0;i<pts.length;i++){
       for(let j=i+1;j<pts.length;j++){
         const a=pts[i], b=pts[j];
-        const dx=a.x-b.x, dy=a.y-b.y, d=Math.hypot(dx,dy);
+        const dx=a.x-b.x, dy=a.y-b.y;   // ← 修复这里
+        const d=Math.hypot(dx,dy);
         if(d<LINK*DPR){
           const alpha = 1 - d/(LINK*DPR);
           ctx.strokeStyle = `rgba(120,120,120,${0.15*alpha})`;
@@ -200,79 +198,95 @@
     requestAnimationFrame(step);
   }
   resize(); init(); step();
-  addEventListener('resize', ()=>{ resize(); });
+  addEventListener('resize', resize);
 })();
 
-/* ======= Load audio list from GitHub for both blocks ======= */
-(async function loadGithubAudio(){
-  // 根据你的仓库设置 owner / repo / 目录
+/* ===== Load audio from GitHub + auto-map Converted ===== */
+(async function(){
   const GH = {
     owner: 'orangecat1219',
     repo:  'Contractive-Speechtripnet',
+    branch:'main',
     sourcePath: 'Data/source_speaker',
-    targetPath: 'Data/target_speaker'
+    targetPath: 'Data/target_speaker',
+    convertedPath: 'Data/converted_speech/1-0.7'
   };
-  const api = (path) =>
+
+  const CONTENTS_API = (path) =>
     `https://api.github.com/repos/${GH.owner}/${GH.repo}/contents/${encodeURIComponent(path)}`;
+  const RAW_URL = (path) =>
+    `https://raw.githubusercontent.com/${GH.owner}/${GH.repo}/${GH.branch}/${path.split('/').map(encodeURIComponent).join('/')}`;
 
   const AUDIO_EXT = ['.wav','.mp3','.m4a','.flac','.ogg','.webm'];
   const ext = (name)=> name.slice(name.lastIndexOf('.')).toLowerCase();
+  const noExt = (name)=> name.replace(/\.[^.]+$/,'');
   const isAudio = (name)=> AUDIO_EXT.includes(ext(name));
+  const extractId = (filename)=> noExt(filename).replace(/^spk_/i,''); // 去扩展名 & 可选 spk_
 
-  async function fillSelect(selectEl, apiPath){
-    selectEl.innerHTML = '<option value="">Loading…</option>';
-    try{
-      const res = await fetch(apiPath, { headers: { 'Accept': 'application/vnd.github+json' }});
-      if(!res.ok) throw new Error('GitHub API error: '+res.status);
-      const items = await res.json();
-      const files = items
-        .filter(x => x.type === 'file' && isAudio(x.name))
-        .map(x => ({ label: x.name, url: x.download_url }));
-
-      if (files.length === 0) {
-        selectEl.innerHTML = '<option value="">(No audio files found)</option>';
-        return [];
-      }
-      selectEl.innerHTML = files.map(f => `<option value="${f.url}">${f.label}</option>`).join('');
-      return files;
-    }catch(err){
-      console.error(err);
-      selectEl.innerHTML = '<option value="">(Failed to load)</option>';
-      return [];
-    }
+  async function listAudio(path){
+    const res = await fetch(CONTENTS_API(path), { headers: { 'Accept':'application/vnd.github+json' }});
+    if(!res.ok) return [];
+    const items = await res.json();
+    return items
+      .filter(x => x.type === 'file' && isAudio(x.name))
+      .map(x => ({ label: x.name, url: x.download_url, name: x.name }));
   }
 
-  // ---- SpeechTripNet block ----
-  const stn = {
-    sSel: document.getElementById('stnSourceSelect'),
-    tSel: document.getElementById('stnTargetSelect'),
-    sAud: document.getElementById('stnSourceAudio'),
-    tAud: document.getElementById('stnTargetAudio'),
-    cAud: document.getElementById('stnConvertedAudio')
-  };
-  await fillSelect(stn.sSel, api(GH.sourcePath));
-  await fillSelect(stn.tSel, api(GH.targetPath));
-  if (stn.sSel.value) stn.sAud.src = stn.sSel.value;
-  if (stn.tSel.value) stn.tAud.src = stn.tSel.value;
-  stn.sSel.addEventListener('change', ()=>{ stn.sAud.src = stn.sSel.value || ''; });
-  stn.tSel.addEventListener('change', ()=>{ stn.tAud.src = stn.tSel.value || ''; });
-  stn.cAud.src = ''; // converted 之后再映射
+  function fillSelectWithFiles(selectEl, files, placeholder='— Select —'){
+    const empty = `<option value="" data-id="">${placeholder}</option>`;
+    const opts  = files.map(f => `<option value="${f.url}" data-id="${extractId(f.name)}">${f.label}</option>`).join('');
+    selectEl.innerHTML = empty + opts;
+    selectEl.value = "";
+  }
 
-  // ---- Contrastive Model block (baseline) ----
-  const base = {
-    sSel: document.getElementById('baseSourceSelect'),
-    tSel: document.getElementById('baseTargetSelect'),
-    sAud: document.getElementById('baseSourceAudio'),
-    tAud: document.getElementById('baseTargetAudio'),
-    cAud: document.getElementById('baseConvertedAudio')
-  };
-  await fillSelect(base.sSel, api(GH.sourcePath));
-  await fillSelect(base.tSel, api(GH.targetPath));
-  if (base.sSel.value) base.sAud.src = base.sSel.value;
-  if (base.tSel.value) base.tAud.src = base.tSel.value;
-  base.sSel.addEventListener('change', ()=>{ base.sAud.src = base.sSel.value || ''; });
-  base.tSel.addEventListener('change', ()=>{ base.tAud.src = base.tSel.value || ''; });
-  base.cAud.src = ''; // 先留空
+  function setConvertedAudio(cAud, bareName){
+    if(!bareName){ cAud.src=''; cAud.load(); return; }
+    const wav = RAW_URL(`${GH.convertedPath}/${bareName}.wav`);
+    const mp3 = RAW_URL(`${GH.convertedPath}/${bareName}.mp3`);
+    cAud.onerror = null;
+    cAud.src = wav; cAud.load();
+    let triedWav = true;
+    cAud.onerror = () => {
+      if(triedWav){
+        triedWav = false;
+        cAud.onerror = null;
+        cAud.src = mp3; cAud.load();
+      }
+    };
+  }
+
+  async function setupModule(prefix){
+    const sSel = document.getElementById(`${prefix}SourceSelect`);
+    const tSel = document.getElementById(`${prefix}TargetSelect`);
+    const sAud = document.getElementById(`${prefix}SourceAudio`);
+    const tAud = document.getElementById(`${prefix}TargetAudio`);
+    const cAud = document.getElementById(`${prefix}ConvertedAudio`);
+
+    const [srcFiles, tgtFiles] = await Promise.all([
+      listAudio(GH.sourcePath),
+      listAudio(GH.targetPath)
+    ]);
+
+    fillSelectWithFiles(sSel, srcFiles);
+    fillSelectWithFiles(tSel, tgtFiles);
+
+    sAud.src=''; sAud.load();
+    tAud.src=''; tAud.load();
+    cAud.src=''; cAud.load();
+
+    function updateConvertedIfReady(){
+      const sId = sSel.selectedOptions[0]?.dataset.id || '';
+      const tId = tSel.selectedOptions[0]?.dataset.id || '';
+      if(!sId || !tId){ setConvertedAudio(cAud,''); return; }
+      setConvertedAudio(cAud, `spk_${sId}__TO__spk_${tId}`);
+    }
+
+    sSel.addEventListener('change', ()=>{ sAud.src = sSel.value || ''; sAud.load(); updateConvertedIfReady(); });
+    tSel.addEventListener('change', ()=>{ tAud.src = tSel.value || ''; tAud.load(); updateConvertedIfReady(); });
+  }
+
+  await setupModule('stn');
+  await setupModule('base');
 })();
 </script>
 </body>
