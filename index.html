@@ -48,15 +48,8 @@
   .title{ text-align:center; margin:0 0 24px; text-shadow:0 6px 22px rgba(0,0,0,.1); }
 
   /* --- logo --- */
-  .logo-wrap{
-    text-align:center;
-    margin-bottom:16px;
-  }
-  .logo{
-    max-width:400px;   /* 调整大小 */
-    height:auto;
-    display:inline-block;
-  }
+  .logo-wrap{ text-align:center; margin-bottom:16px; }
+  .logo{ max-width:140px; height:auto; display:inline-block; }
 
   .main-title {
     text-align:center;
@@ -101,17 +94,10 @@
 
   <!-- Foreground -->
   <div class="page">
-
-    <!-- School logo ABOVE the title -->
     <div class="logo-wrap">
-      <!-- 用白底的： -->
       <img src="TAB_col_white_background.png" alt="School Logo" class="logo">
-      <!-- 若想换另一张，注释上面一行，启用下面这一行：
-      <img src="TAB_col_background.png" alt="School Logo" class="logo">
-      -->
     </div>
 
-    <!-- Main Title -->
     <h1 class="main-title">
       Disentangled Speech Representation Learning with Binary Contrastive Loss: Improving Speaker Consistency in Voice Conversion
     </h1>
@@ -124,20 +110,12 @@
       <div class="grid">
         <div class="col">
           <h3>Source Speaker</h3>
-          <select id="stnSourceSelect">
-            <option value="https://interactive-examples.mdn.mozilla.net/media/cc0-audio/t-rex-roar.mp3">speaker1-speech1</option>
-            <option value="https://interactive-examples.mdn.mozilla.net/media/examples/t-rex-roar.mp3">speaker1-speech2</option>
-            <option value="https://interactive-examples.mdn.mozilla.net/media/cc0-audio/t-rex-roar.mp3">speaker2-speech1</option>
-          </select>
+          <select id="stnSourceSelect"></select>
           <audio id="stnSourceAudio" controls></audio>
         </div>
         <div class="col">
           <h3>Target Speaker</h3>
-          <select id="stnTargetSelect">
-            <option value="https://interactive-examples.mdn.mozilla.net/media/examples/t-rex-roar.mp3">speakerA-speech1</option>
-            <option value="https://interactive-examples.mdn.mozilla.net/media/cc0-audio/t-rex-roar.mp3">speakerA-speech2</option>
-            <option value="https://interactive-examples.mdn.mozilla.net/media/examples/t-rex-roar.mp3">speakerB-speech1</option>
-          </select>
+          <select id="stnTargetSelect"></select>
           <audio id="stnTargetAudio" controls></audio>
         </div>
         <div class="col">
@@ -147,25 +125,21 @@
       </div>
     </section>
 
-    <!-- Module 2 -->
+    <!-- Module 2 (unchanged) -->
     <section class="module" id="baseline">
       <h2>Contrastive Model Results</h2>
       <div class="grid">
         <div class="col">
           <h3>Source Speaker</h3>
           <select id="baseSourceSelect">
-            <option value="https://interactive-examples.mdn.mozilla.net/media/examples/t-rex-roar.mp3">speaker1-speech1</option>
-            <option value="https://interactive-examples.mdn.mozilla.net/media/cc0-audio/t-rex-roar.mp3">speaker1-speech2</option>
-            <option value="https://interactive-examples.mdn.mozilla.net/media/examples/t-rex-roar.mp3">speaker2-speech1</option>
+            <option>— keep as is for now —</option>
           </select>
           <audio id="baseSourceAudio" controls></audio>
         </div>
         <div class="col">
           <h3>Target Speaker</h3>
           <select id="baseTargetSelect">
-            <option value="https://interactive-examples.mdn.mozilla.net/media/cc0-audio/t-rex-roar.mp3">speakerA-speech1</option>
-            <option value="https://interactive-examples.mdn.mozilla.net/media/examples/t-rex-roar.mp3">speakerA-speech2</option>
-            <option value="https://interactive-examples.mdn.mozilla.net/media/cc0-audio/t-rex-roar.mp3">speakerB-speech1</option>
+            <option>— keep as is for now —</option>
           </select>
           <audio id="baseTargetAudio" controls></audio>
         </div>
@@ -178,7 +152,7 @@
   </div>
 
 <script>
-/* ===== Particle Background ===== */
+/* ===== Particle Background (unchanged) ===== */
 (function(){
   const c = document.getElementById('bg-canvas');
   const ctx = c.getContext('2d');
@@ -228,8 +202,80 @@
   resize(); init(); step();
   addEventListener('resize', ()=>{ resize(); });
 })();
+
+/* ======= Load audio list from GitHub for SpeechTripNet (Source/Target) ======= */
+(async function loadGithubAudio(){
+  // 根据你的仓库设置owner/repo和目录
+  const GH = {
+    owner: 'orangecat1219',
+    repo:  'Contractive-Speechtripnet',
+    sourcePath: 'Data/source_speaker',
+    targetPath: 'Data/target_speaker'
+  };
+
+  // GitHub contents API
+  const api = (path) =>
+    `https://api.github.com/repos/${GH.owner}/${GH.repo}/contents/${encodeURIComponent(path)}`;
+
+  // 只接受这些音频格式
+  const AUDIO_EXT = ['.wav','.mp3','.m4a','.flac','.ogg','.webm'];
+
+  // 工具：提取扩展名
+  const ext = (name)=> name.slice(name.lastIndexOf('.')).toLowerCase();
+  const isAudio = (name)=> AUDIO_EXT.includes(ext(name));
+
+  // 填充下拉框
+  async function fillSelect(selectEl, apiPath){
+    selectEl.innerHTML = '<option value="">Loading…</option>';
+    try{
+      const res = await fetch(apiPath, { headers: { 'Accept': 'application/vnd.github+json' }});
+      if(!res.ok) throw new Error('GitHub API error: '+res.status);
+      const items = await res.json();
+
+      const files = items
+        .filter(x => x.type === 'file' && isAudio(x.name))
+        .map(x => ({ label: x.name, url: x.download_url }));
+
+      if (files.length === 0) {
+        selectEl.innerHTML = '<option value="">(No audio files found)</option>';
+        return [];
+      }
+
+      selectEl.innerHTML = files
+        .map(f => `<option value="${f.url}">${f.label}</option>`)
+        .join('');
+
+      return files;
+    }catch(err){
+      console.error(err);
+      selectEl.innerHTML = '<option value="">(Failed to load)</option>';
+      return [];
+    }
+  }
+
+  // 绑定播放器
+  const sSel = document.getElementById('stnSourceSelect');
+  const tSel = document.getElementById('stnTargetSelect');
+  const sAud = document.getElementById('stnSourceAudio');
+  const tAud = document.getElementById('stnTargetAudio');
+  const cAud = document.getElementById('stnConvertedAudio'); // 先不处理转换音频
+
+  // 先加载 source/target 列表
+  await fillSelect(sSel, api(GH.sourcePath));
+  await fillSelect(tSel, api(GH.targetPath));
+
+  // 默认选中第一项并加载到播放器
+  if (sSel.value) sAud.src = sSel.value;
+  if (tSel.value) tAud.src = tSel.value;
+
+  sSel.addEventListener('change', ()=>{ sAud.src = sSel.value || ''; });
+  tSel.addEventListener('change', ()=>{ tAud.src = tSel.value || ''; });
+
+  // 转换结果先占位（之后我们再用你 converted_speech 的规则来映射）
+  cAud.src = '';
+})();
   
-/* ===== Block Logic ===== */
+/* ===== Baseline block (keep as is for now) ===== */
 function setupBlock(prefix){
   const sSel = document.getElementById(prefix+'SourceSelect');
   const tSel = document.getElementById(prefix+'TargetSelect');
@@ -238,19 +284,14 @@ function setupBlock(prefix){
   const cAud = document.getElementById(prefix+'ConvertedAudio');
 
   function updateConverted(){
-    cAud.src = "https://interactive-examples.mdn.mozilla.net/media/cc0-audio/t-rex-roar.mp3";
+    cAud.src = ""; // placeholder
   }
-  function updateSrc(){ sAud.src = sSel.value; updateConverted(); }
-  function updateTgt(){ tAud.src = tSel.value; updateConverted(); }
+  function updateSrc(){ if (sSel && sAud) { sAud.src = sSel.value; updateConverted(); } }
+  function updateTgt(){ if (tSel && tAud) { tAud.src = tSel.value; updateConverted(); } }
 
-  sSel.addEventListener('change', updateSrc);
-  tSel.addEventListener('change', updateTgt);
-
-  sAud.src = sSel.value;
-  tAud.src = tSel.value;
-  updateConverted();
+  if (sSel) sSel.addEventListener('change', updateSrc);
+  if (tSel) tSel.addEventListener('change', updateTgt);
 }
-setupBlock('stn');
 setupBlock('base');
 </script>
 </body>
