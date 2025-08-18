@@ -22,7 +22,6 @@
     overflow-y:auto;
   }
 
-  /* ===== Background (soft colorful glow) ===== */
   .gradient{
     position:fixed; inset:0; z-index:0;
     background:#ffffff;
@@ -43,22 +42,11 @@
     position:fixed; inset:0; z-index:1; pointer-events:none;
   }
 
-  /* ===== Foreground ===== */
   .page{ max-width:var(--page-w); margin:32px auto; padding:0 16px; position:relative; z-index:2; }
   .title{ text-align:center; margin:0 0 24px; text-shadow:0 6px 22px rgba(0,0,0,.1); }
-
-  /* --- logo --- */
   .logo-wrap{ text-align:center; margin-bottom:16px; }
   .logo{ max-width:140px; height:auto; display:inline-block; }
-
-  .main-title {
-    text-align:center;
-    font-size:36px;
-    font-weight:bold;
-    margin-bottom:30px;
-    color:var(--main-color);
-    text-shadow:0 4px 12px rgba(0,0,0,.15);
-  }
+  .main-title { text-align:center; font-size:36px; font-weight:bold; margin-bottom:30px; color:var(--main-color); text-shadow:0 4px 12px rgba(0,0,0,.15); }
 
   .module{
     background:var(--card-bg);
@@ -71,11 +59,7 @@
   }
   .module h2{ text-align:center; margin:6px 0 16px; }
   .grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:var(--gap); }
-  .col{
-    background:#fff; border:1px solid var(--border);
-    border-radius:12px; padding:14px; box-shadow:0 6px 16px rgba(0,0,0,.05);
-    color:var(--main-color);
-  }
+  .col{ background:#fff; border:1px solid var(--border); border-radius:12px; padding:14px; box-shadow:0 6px 16px rgba(0,0,0,.05); color:var(--main-color); }
   .col h3{ margin:0 0 10px; font-size:16px; }
   select{ width:100%; padding:8px 10px; border:1px solid var(--border); border-radius:10px; background:#fff; margin-bottom:10px; font-size:14px; color:#333; }
   audio{ width:100%; }
@@ -88,14 +72,11 @@
 </style>
 </head>
 <body>
-  <!-- Background -->
   <div class="gradient" aria-hidden="true"></div>
   <canvas id="bg-canvas" aria-hidden="true"></canvas>
 
-  <!-- Foreground -->
   <div class="page">
     <div class="logo-wrap">
-      <!-- 若需要换另一张，改成 TAB_col_background.png 或你的路径 -->
       <img src="TAB_col_white_background.png" alt="School Logo" class="logo">
     </div>
 
@@ -149,8 +130,7 @@
   </div>
 
 <script>
-/* ===== Particle background (fixed) ===== */
-(function(){
+function particleBackground(){
   const c = document.getElementById('bg-canvas');
   const ctx = c.getContext('2d');
   let W,H,DPR, pts=[];
@@ -178,7 +158,7 @@
     for(let i=0;i<pts.length;i++){
       for(let j=i+1;j<pts.length;j++){
         const a=pts[i], b=pts[j];
-        const dx=a.x-b.x, dy=a.y-b.y;   // ← 修复这里
+        const dx=a.x-b.x, dy=a.y-b.y;
         const d=Math.hypot(dx,dy);
         if(d<LINK*DPR){
           const alpha = 1 - d/(LINK*DPR);
@@ -199,21 +179,19 @@
   }
   resize(); init(); step();
   addEventListener('resize', resize);
-})();
+}
+particleBackground();
 
-/* ===== Load audio from GitHub + auto-map Converted ===== */
+/* ===== Load audio from GitHub ===== */
 (async function(){
   const GH = {
     owner: 'orangecat1219',
     repo:  'Contractive-Speechtripnet',
     branch:'main',
     sourcePath: 'Data/source_speaker',
-    targetPath: 'Data/target_speaker',
-    convertedPath: 'Data/converted_speech/1-0.7'
+    targetPath: 'Data/target_speaker'
   };
 
-  const CONTENTS_API = (path) =>
-    `https://api.github.com/repos/${GH.owner}/${GH.repo}/contents/${encodeURIComponent(path)}`;
   const RAW_URL = (path) =>
     `https://raw.githubusercontent.com/${GH.owner}/${GH.repo}/${GH.branch}/${path.split('/').map(encodeURIComponent).join('/')}`;
 
@@ -221,72 +199,67 @@
   const ext = (name)=> name.slice(name.lastIndexOf('.')).toLowerCase();
   const noExt = (name)=> name.replace(/\.[^.]+$/,'');
   const isAudio = (name)=> AUDIO_EXT.includes(ext(name));
-  const extractId = (filename)=> noExt(filename).replace(/^spk_/i,''); // 去扩展名 & 可选 spk_
+  const extractId = (filename)=> noExt(filename).replace(/^spk_/i,'');
 
-  async function listAudio(path){
-    const res = await fetch(CONTENTS_API(path), { headers: { 'Accept':'application/vnd.github+json' }});
+  async function listFiles(path){
+    const res = await fetch(`https://api.github.com/repos/${GH.owner}/${GH.repo}/contents/${encodeURIComponent(path)}`);
     if(!res.ok) return [];
     const items = await res.json();
-    return items
-      .filter(x => x.type === 'file' && isAudio(x.name))
-      .map(x => ({ label: x.name, url: x.download_url, name: x.name }));
+    return items.filter(x=>x.type==='file' && isAudio(x.name)).map(x=>({
+      label:x.name, url:x.download_url, name:x.name
+    }));
   }
 
-  function fillSelectWithFiles(selectEl, files, placeholder='— Select —'){
-    const empty = `<option value="" data-id="">${placeholder}</option>`;
+  function fillSelect(selectEl, files){
+    const empty = `<option value="" data-id="">— Select —</option>`;
     const opts  = files.map(f => `<option value="${f.url}" data-id="${extractId(f.name)}">${f.label}</option>`).join('');
     selectEl.innerHTML = empty + opts;
-    selectEl.value = "";
+    selectEl.value="";
   }
 
-  function setConvertedAudio(cAud, bareName){
+  function setConvertedAudio(cAud, bareName, folder){
     if(!bareName){ cAud.src=''; cAud.load(); return; }
-    const wav = RAW_URL(`${GH.convertedPath}/${bareName}.wav`);
-    const mp3 = RAW_URL(`${GH.convertedPath}/${bareName}.mp3`);
+    const wav = RAW_URL(`${folder}/${bareName}.wav`);
+    const mp3 = RAW_URL(`${folder}/${bareName}.mp3`);
     cAud.onerror = null;
     cAud.src = wav; cAud.load();
     let triedWav = true;
     cAud.onerror = () => {
       if(triedWav){
-        triedWav = false;
-        cAud.onerror = null;
-        cAud.src = mp3; cAud.load();
+        triedWav=false;
+        cAud.onerror=null;
+        cAud.src=mp3; cAud.load();
       }
     };
   }
 
-  async function setupModule(prefix){
-    const sSel = document.getElementById(`${prefix}SourceSelect`);
-    const tSel = document.getElementById(`${prefix}TargetSelect`);
-    const sAud = document.getElementById(`${prefix}SourceAudio`);
-    const tAud = document.getElementById(`${prefix}TargetAudio`);
-    const cAud = document.getElementById(`${prefix}ConvertedAudio`);
+  async function setupModule(prefix, convertedPath){
+    const sSel=document.getElementById(`${prefix}SourceSelect`);
+    const tSel=document.getElementById(`${prefix}TargetSelect`);
+    const sAud=document.getElementById(`${prefix}SourceAudio`);
+    const tAud=document.getElementById(`${prefix}TargetAudio`);
+    const cAud=document.getElementById(`${prefix}ConvertedAudio`);
 
-    const [srcFiles, tgtFiles] = await Promise.all([
-      listAudio(GH.sourcePath),
-      listAudio(GH.targetPath)
+    const [srcFiles,tgtFiles]=await Promise.all([
+      listFiles(GH.sourcePath),
+      listFiles(GH.targetPath)
     ]);
+    fillSelect(sSel,srcFiles);
+    fillSelect(tSel,tgtFiles);
 
-    fillSelectWithFiles(sSel, srcFiles);
-    fillSelectWithFiles(tSel, tgtFiles);
-
-    sAud.src=''; sAud.load();
-    tAud.src=''; tAud.load();
-    cAud.src=''; cAud.load();
-
-    function updateConvertedIfReady(){
-      const sId = sSel.selectedOptions[0]?.dataset.id || '';
-      const tId = tSel.selectedOptions[0]?.dataset.id || '';
-      if(!sId || !tId){ setConvertedAudio(cAud,''); return; }
-      setConvertedAudio(cAud, `spk_${sId}__TO__spk_${tId}`);
+    function updateConverted(){
+      const sId=sSel.selectedOptions[0]?.dataset.id||'';
+      const tId=tSel.selectedOptions[0]?.dataset.id||'';
+      if(!sId||!tId){ setConvertedAudio(cAud,'',convertedPath); return; }
+      setConvertedAudio(cAud,`spk_${sId}__TO__spk_${tId}`,convertedPath);
     }
 
-    sSel.addEventListener('change', ()=>{ sAud.src = sSel.value || ''; sAud.load(); updateConvertedIfReady(); });
-    tSel.addEventListener('change', ()=>{ tAud.src = tSel.value || ''; tAud.load(); updateConvertedIfReady(); });
+    sSel.addEventListener('change',()=>{ sAud.src=sSel.value||''; sAud.load(); updateConverted(); });
+    tSel.addEventListener('change',()=>{ tAud.src=tSel.value||''; tAud.load(); updateConverted(); });
   }
 
-  await setupModule('stn');
-  await setupModule('base');
+  await setupModule('stn','Data/baseline');                // SpeechTripNet
+  await setupModule('base','Data/converted_speech/1-0.7'); // Contrastive
 })();
 </script>
 </body>
