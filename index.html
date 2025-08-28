@@ -12,63 +12,159 @@
     --border: rgba(200,200,200,.8);
     --main-color: #50aead;
   }
-
-  html,body{
-    height:100%;
-    margin:0;
-    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
-    background: transparent;
-    color:var(--main-color);
-    overflow-y:auto;
-  }
-
-  .gradient{
-    position:fixed; inset:0; z-index:0;
-    background:#ffffff;
-  }
-  .gradient::after{
-    content:""; position:absolute; inset:-20%;
-    filter:blur(140px) saturate(120%);
-    background:conic-gradient(from 0deg,
-      rgba(59,130,246,.25),
-      rgba(168,85,247,.25),
-      rgba(16,185,129,.25),
-      rgba(245,158,11,.25),
-      rgba(59,130,246,.25));
-    animation:spin 20s linear infinite;
-  }
+  html,body{height:100%;margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;background:transparent;color:var(--main-color);overflow-y:auto;}
+  .gradient{position:fixed; inset:0; z-index:0; background:#ffffff;}
+  .gradient::after{content:""; position:absolute; inset:-20%; filter:blur(140px) saturate(120%); background:conic-gradient(from 0deg, rgba(59,130,246,.25), rgba(168,85,247,.25), rgba(16,185,129,.25), rgba(245,158,11,.25), rgba(59,130,246,.25)); animation:spin 20s linear infinite;}
   @keyframes spin{ to{ transform:rotate(360deg) } }
-  #bg-canvas{
-    position:fixed; inset:0; z-index:1; pointer-events:none;
-  }
-
+  #bg-canvas{position:fixed; inset:0; z-index:1; pointer-events:none;}
   .page{ max-width:var(--page-w); margin:32px auto; padding:0 16px; position:relative; z-index:2; }
   .title{ text-align:center; margin:0 0 24px; text-shadow:0 6px 22px rgba(0,0,0,.1); }
   .logo-wrap{ text-align:center; margin-bottom:16px; }
   .logo{ max-width:140px; height:auto; display:inline-block; }
-  .main-title { text-align:center; font-size:36px; font-weight:bold; margin-bottom:30px; color:var(--main-color); text-shadow:0 4px 12px rgba(0,0,0,.15); }
-
-  .module{
-    background:var(--card-bg);
-    border:1px solid var(--border);
-    border-radius:16px;
-    padding:18px; margin-bottom:28px;
-    box-shadow:0 10px 25px rgba(0,0,0,.08);
-    backdrop-filter:saturate(140%) blur(8px);
-    color:var(--main-color);
-  }
+  .main-title { text-align:center; font-size:36px; font-weight:bold; margin-bottom:8px; color:var(--main-color); text-shadow:0 4px 12px rgba(0,0,0,.15); }
+  .settings{ display:flex; justify-content:center; align-items:center; gap:10px; margin-bottom:22px; }
+  .settings button{ border:1px solid var(--border); background:#fff; color:#0f172a; border-radius:10px; padding:6px 10px; cursor:pointer; }
+  .settings .hint{ font-size:12px; opacity:.8; }
+  .module{ background:var(--card-bg); border:1px solid var(--border); border-radius:16px; padding:18px; margin-bottom:28px; box-shadow:0 10px 25px rgba(0,0,0,.08); backdrop-filter:saturate(140%) blur(8px); color:var(--main-color); }
   .module h2{ text-align:center; margin:6px 0 16px; }
   .grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:var(--gap); }
   .col{ background:#fff; border:1px solid var(--border); border-radius:12px; padding:14px; box-shadow:0 6px 16px rgba(0,0,0,.05); color:var(--main-color); }
   .col h3{ margin:0 0 10px; font-size:16px; }
   select{ width:100%; padding:8px 10px; border:1px solid var(--border); border-radius:10px; background:#fff; margin-bottom:10px; font-size:14px; color:#333; }
   audio{ width:100%; }
-
+  .diag{font:12px/1.4 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New",monospace; opacity:.6; margin-top:6px;}
   @media (max-width:900px){
     .grid{ grid-template-columns:1fr; }
     .page{ margin:16px auto; }
     .logo{ max-width:120px; }
   }
+  /* ===== Results table card ===== */
+.results-card{
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 18px;
+  margin-bottom: 28px;
+  box-shadow: 0 10px 25px rgba(0,0,0,.08);
+  backdrop-filter: saturate(140%) blur(8px);
+}
+.results-card h2{
+  text-align:center;
+  margin: 6px 0 16px;
+  color: var(--main-color);
+}
+.results-table{
+  width:100%;
+  border-collapse:separate;
+  border-spacing:0;
+  overflow:hidden;
+  border:1px solid var(--border);
+  border-radius:12px;
+  background:#fff;
+  color:#0f172a;
+  font-size:14px;
+}
+.results-table thead th{
+  background:#f3f4f6;
+  font-weight:600;
+  text-align:left;
+  padding:10px 12px;
+  border-bottom:1px solid var(--border);
+}
+.results-table tbody td{
+  padding:10px 12px;
+  border-bottom:1px solid #eee;
+}
+.results-table tbody tr:last-child td{ border-bottom:none; }
+.results-badge{
+  display:inline-block;
+  padding:2px 8px;
+  border-radius:10px;
+  border:1px solid var(--border);
+  background:#fafafa;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace;
+  font-size:12px;
+  color:#374151;
+}
+@media (max-width:900px){
+  .results-table{ font-size:13px; }
+  .results-table thead{ display:none; }
+  .results-table, .results-table tbody, .results-table tr, .results-table td{ display:block; width:100%; }
+  .results-table tr{ border-bottom:1px solid var(--border); padding:8px 0; }
+  .results-table td{ border:none; padding:6px 8px; }
+  .results-table td::before{
+    content: attr(data-label);
+    display:block;
+    opacity:.6;
+    margin-bottom:2px;
+  }
+}
+/* 仅让某些表格横向滚动 */
+.table-scroll{
+  width:100%;
+  overflow-x:auto;          /* 关键：出现横向滚动条，而不撑破容器 */
+}
+.table-scroll table{
+  min-width: 980px;         /* 根据列数调整，保证不被压扁 */
+}
+/* 可选：让“配置”列更紧凑 */
+.results-table td.config,
+.results-table th.config{
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace;
+  font-size: 12px;
+  white-space: nowrap;      /* 单行显示（如需换行可改为 normal 并加 word-break） */
+}
+.results-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
+}
+
+.result-img h3 {
+  text-align: center;
+  margin-bottom: 8px;
+  color: var(--main-color);
+}
+
+.result-img img {
+  width: 100%;
+  border-radius: 12px;
+  box-shadow: 0 6px 16px rgba(0,0,0,.1);
+}
+
+@media (max-width:900px){
+  .results-grid {
+    grid-template-columns: 1fr; /* 小屏幕下自动变单列 */
+  }
+}
+/* ==== Single-column image list + lightbox ==== */
+.gallery-card{ background:var(--card-bg); border:1px solid var(--border);
+  border-radius:16px; padding:18px; margin-bottom:28px; box-shadow:0 10px 25px rgba(0,0,0,.08);
+  backdrop-filter:saturate(140%) blur(8px); }
+.gallery-card h2{ text-align:center; margin:6px 0 16px; color:var(--main-color); }
+
+.gallery-list{ display:flex; flex-direction:column; gap:16px; }
+.gallery-item{ background:#fff; border:1px solid var(--border); border-radius:12px;
+  overflow:hidden; box-shadow:0 6px 16px rgba(0,0,0,.05); cursor:zoom-in; }
+.gallery-item img{ display:block; width:100%; height:auto; }
+.gallery-item figcaption{ padding:10px 12px; font-size:13px; color:#0f172a; background:#fafafa; }
+
+/* Lightbox */
+.lightbox{ position:fixed; inset:0; display:none; align-items:center; justify-content:center;
+  background:rgba(0,0,0,.65); z-index:9999; }
+.lightbox.open{ display:flex; }
+.lightbox-content{ position:relative; max-width:92vw; max-height:88vh; }
+.lightbox-img{ max-width:100%; max-height:88vh; border-radius:12px; display:block; }
+.lightbox-caption{ margin-top:8px; text-align:center; color:#fff; font-size:14px; }
+
+/* tools & nav */
+.lightbox-tools{ position:absolute; top:-44px; right:0; display:flex; gap:8px; }
+.lightbox-btn{ background:#fff; border:1px solid var(--border); padding:6px 10px; border-radius:10px; cursor:pointer; }
+.lb-nav{ position:absolute; top:50%; transform:translateY(-50%); width:44px; height:44px;
+  display:flex; align-items:center; justify-content:center; background:rgba(255,255,255,.9);
+  border-radius:50%; cursor:pointer; user-select:none; }
+.lb-prev{ left:-56px; } .lb-next{ right:-56px; }
+@media (max-width:700px){ .lb-prev{left:8px} .lb-next{right:8px} .lightbox-tools{ top:8px; right:8px; } }
 </style>
 </head>
 <body>
@@ -84,8 +180,290 @@
       Disentangled Speech Representation Learning with Binary Contrastive Loss: Improving Speaker Consistency in Voice Conversion
     </h1>
 
-    <h2 class="title">Voice Conversion Comparison Demo</h2>
+    <div class="settings">
+      <button id="setTokenBtn">⚙️ Settings</button>
+      <span class="hint">Optional: set a GitHub Personal Access Token (PAT) to avoid API rate limits / access private repos.</span>
+    </div>
 
+    <h2 class="title">Voice Conversion Comparison Demo</h2>
+<!-- 卡片 1：SV（不滚动） -->
+<section class="results-card" id="results-sv">
+  <h2>Latents Probing Speaker Verification (SV)</h2>
+  <table class="results-table" aria-describedby="results-sv">
+    <thead>
+      <tr>
+        <th style="width:120px;">EER</th>
+        <th>Baseline model</th>
+        <th>Best_contrastModel</th>
+        <th style="width:180px;">Model Configuration</th>
+        <th>Worst_contrastModel</th>
+        <th style="width:180px;">Model Configuration</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>z<sub>s</sub></strong></td>
+        <td>19.5%</td>
+        <td>14.3%</td>
+        <td><span class="results-badge">lambda1.0-margin0.5</span></td>
+        <td>75.7%</td>
+        <td><span class="results-badge">lambda10-margin0.5</span></td>
+      </tr>
+      <tr>
+        <td><strong>z<sub>c</sub></strong></td>
+        <td>45%</td>
+        <td>47.2%</td>
+        <td><span class="results-badge">lambda1.0-margin0.5</span></td>
+        <td>43.8%</td>
+        <td><span class="results-badge">lambda0.1-margin0.7</span></td>
+      </tr>
+      <tr>
+        <td><strong>z<sub>p</sub></strong></td>
+        <td>33.5%</td>
+        <td>38.9%</td>
+        <td><span class="results-badge">lambda0.1-margin0.7</span></td>
+        <td>32.1%</td>
+        <td><span class="results-badge">lambda1.0-margin5</span></td>
+      </tr>
+    </tbody>
+  </table>
+  <p class="diag" style="margin-top:8px;">Notes: lower EER is better.</p>
+</section>
+
+<!-- 卡片 2：SID（可横向滚动） -->
+<section class="results-card" id="results-sid">
+  <h2>Latents Probing Speaker Identification (SID)</h2>
+  <div class="table-scroll">
+    <table class="results-table" aria-describedby="results-sid">
+      <thead>
+        <tr>
+          <th style="width:120px;">Acc</th>
+          <th>Baseline model</th>
+          <th class="config">Classifier Configuration</th>
+          <th>Best_contrastModel</th>
+          <th style="width:180px;">Model Configuration</th>
+          <th class="config">Classifier Configuration</th>
+          <th>Worst_contrastModel</th>
+          <th style="width:180px;">Model Configuration</th>
+          <th class="config">Classifier Configuration</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>z<sub>s</sub></strong></td>
+          <td>21.75</td>
+          <td class="config">Epoch:30, LR:0.1, Weight decay:0.0</td>
+          <td>36.27%</td>
+          <td><span class="results-badge">lambda0.1-margin5</span></td>
+          <td class="config">Epoch:30, LR:0.1, Weight decay:0.0</td>
+          <td>0.32%</td>
+          <td><span class="results-badge">lambda10-margin0.5</span></td>
+          <td class="config">Epoch:20, LR:0.1, Weight decay:0.0</td>
+        </tr>
+        <tr>
+          <td><strong>z<sub>c</sub></strong></td>
+          <td>3.95</td>
+          <td class="config">Epoch:30, LR:0.1, Weight decay:0.0</td>
+          <td>2.3%</td>
+          <td><span class="results-badge">lambda1.0-margin1</span></td>
+          <td class="config">Epoch:30, LR:0.1, Weight decay:0.0</td>
+          <td>4.68%</td>
+          <td><span class="results-badge">lambda0.1-margin0.7</span></td>
+          <td class="config">Epochs:30,LR:0.1,weight_decay:0.0</td>
+        </tr>
+        <tr>
+          <td><strong>z<sub>p</sub></strong></td>
+          <td>1.98</td>
+          <td class="config">Epochs:30,LR:0.1,weight_decay:0.0</td>
+          <td>1.59%</td>
+          <td><span class="results-badge">lambda0.1-margin0.7</span></td>
+          <td class="config">Epochs:30,LR:0.1,weight_decay:0.0</td>
+          <td>2.22%</td>
+          <td><span class="results-badge">lambda1.0-margin5</span></td>
+          <td class="config">Epoch:30, LR:0.1, Weight decay:0.0</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="diag" style="margin-top:8px;">Notes: higher Acc is better.</p>
+</section>
+<!-- 卡片 3：Converted Speech Evaluation (SV) -->
+<section class="results-card" id="results-converted-sv">
+  <h2>Speech Converted Evaluation Speaker Verification</h2>
+  <table class="results-table" aria-describedby="results-converted-sv">
+    <thead>
+      <tr>
+        <th style="width:180px;">EER</th>
+        <th>Baseline model</th>
+        <th>Model Hyperparameter</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>BaseModel</strong></td>
+        <td><strong>43.2%</strong></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><strong>Best_ContrastModel</strong></td>
+        <td>21.4%</td>
+        <td><span class="results-badge">lambda10-margin5</span></td>
+      </tr>
+      <tr>
+        <td><strong>Worst_ContrastModel</strong></td>
+        <td>43.9%</td>
+        <td><span class="results-badge">lambda1.0-margin1</span></td>
+      </tr>
+      <tr>
+        <td><strong>UpperBound</strong></td>
+        <td>5.7%</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <p class="diag" style="margin-top:8px;">Notes: lower EER is better; UpperBound represents oracle performance.</p>
+</section>
+<!-- 卡片 4：Converted Speech Evaluation (SID) -->
+<section class="results-card" id="results-converted-sid">
+  <h2>Speech Converted Evaluation Speaker Identification</h2>
+  <div class="table-scroll">
+    <table class="results-table" aria-describedby="results-converted-sid">
+      <thead>
+        <tr>
+          <th style="width:180px;">Model</th>
+          <th>Acc</th>
+          <th>Classification Hyperparameter</th>
+          <th>Model Hyperparameter</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Baseline model</strong></td>
+          <td>14.25%</td>
+          <td>Epoch:30, LR:0.1, Weight decay:0.0</td>
+          <td></td>
+        </tr>
+        <tr>
+          <td><strong>Best_ContrastModel</strong></td>
+          <td>63.2%</td>
+          <td>Epoch:30, LR:0.1, Weight decay:0.0</td>
+          <td><span class="results-badge">lambda10-margin5</span></td>
+        </tr>
+        <tr>
+          <td><strong>Worst_ContrastModel</strong></td>
+          <td>14.46%</td>
+          <td>Epoch:30, LR:0.1, Weight decay:0.0</td>
+          <td><span class="results-badge">lambda1.0-margin0.5</span></td>
+        </tr>
+        <tr>
+          <td><strong>UpperBound</strong></td>
+          <td>95.24%</td>
+          <td>Epoch:10, LR:0.1, Weight decay:0.0</td>
+          <td></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="diag" style="margin-top:8px;">Notes: higher Acc is better; UpperBound is an oracle performance reference.</p>
+</section>
+<!-- Results Images (2x2 Grid) -->
+<section class="results-card" id="results-images">
+  <h2>Experiment Results Overview</h2>
+  <div class="results-grid">
+    <div class="result-img">
+      <h3>Latent Probing SV</h3>
+      <img src="Latents Probing Speaker Verification (EER).png" alt="Latent Probing SV">
+    </div>
+    <div class="result-img">
+      <h3>Latent Probing SID</h3>
+      <img src="Latents Probing Speaker Identification (Accuracy).png" alt="Latent Probing SID">
+    </div>
+    <div class="result-img">
+      <h3>Converted SV</h3>
+      <img src="Speech Converted Evaluation Speaker Identification (Accuracy).png" alt="Converted SV">
+    </div>
+    <div class="result-img">
+      <h3>Converted SID</h3>
+      <img src="converted_sid_acc_ybg_toplegend_high.png" alt="Converted SID">
+    </div>
+  </div>
+</section>
+<section class="results-card" id="results-images">
+  <h2>Latent Probing SID Confusion Matrix</h2>
+  <div class="results-grid">
+    <div class="result-img">
+      <h3>BaseModel Latent Probing z_s Confusion Matrix</h3>
+      <img src="BaseModel_latent_confusion/confusion_z_s.png" alt="BaseModel Latent Probing z_s Confusion Matrix">
+    </div>
+    <div class="result-img">
+      <h3>BestModel Latent Probing z_s Confusion Matrix</h3>
+      <img src="BestModel_latent_confusion/confusion_z_s.png" alt="BestModel Latent Probing z_s Confusion Matrix">
+    </div>
+    <div class="result-img">
+      <h3>WrostModel Latent Probing z_s Confusion Matrix</h3>
+      <img src="WrostModel_latent_confusion/confusion_z_s.png" alt="WrostModel Latent Probing z_s Confusion Matrix">
+    </div>
+  </div>
+</section>
+<section class="results-card" id="results-images">
+  <h2>Latent Probing SV ROC Curve</h2>
+  <div class="results-grid">
+    <div class="result-img">
+      <h3>BaseModel Latent probing ROC Curve</h3>
+      <img src="BaseModel_latent_EER.png" alt="Latent Probing SV">
+    </div>
+    <div class="result-img">
+      <h3>BestModel Latent probing ROC Curve</h3>
+      <img src="BestModel_latent_EER_1_0.5.png" alt="Latent Probing SID">
+    </div>
+    <div class="result-img">
+      <h3>WrostModel Latent probing ROC Curve</h3>
+      <img src="WorstModel_latent_EER_10_0.5.png" alt="Converted SV">
+    </div>
+  </div>
+</section>
+<section class="results-card" id="results-images">
+  <h2>Converted Speech Evaluation SID Results</h2>
+  <div class="results-grid">
+    <div class="result-img">
+      <h3>BaseModel Converted Speech Evaluation z_s Confusion Matrix</h3>
+      <img src="BaseModel_converted_confusion.png" alt="Latent Probing SV">
+    </div>
+    <div class="result-img">
+      <h3>BestModel Converted Speech Evaluation z_s Confusion Matrix</h3>
+      <img src="BestModel_converted_confusion_10_5.png" alt="Latent Probing SID">
+    </div>
+    <div class="result-img">
+      <h3>UpperBound Converted Speech Evaluation z_s Confusion Matrix</h3>
+      <img src="UpperBound_converted_confusion.png" alt="Converted SV">
+    </div>
+    <div class="result-img">
+      <h3>WorstModel Converted Speech Evaluation z_s Confusion Matrix</h3>
+      <img src="WorstModel_converted_confusion_1_0.5.png" alt="Converted SID">
+    </div>
+  </div>
+</section>
+<section class="results-card" id="results-images">
+  <h2>Converted Speech Evaluation SV Results</h2>
+  <div class="results-grid">
+    <div class="result-img">
+      <h3>BaseModel Converted Speech Evaluation ROC Curve</h3>
+      <img src="Baseline_converted_EER.png" alt="Latent Probing SV">
+    </div>
+    <div class="result-img">
+      <h3>BestModel Converted Speech Evaluation ROC Curve</h3>
+      <img src="BestModel_converted_EER_10_5.png" alt="Latent Probing SID">
+    </div>
+    <div class="result-img">
+      <h3>UpperBound Converted Speech Evaluation ROC Curve</h3>
+      <img src="UpperBound_converted_EER.png" alt="Converted SV">
+    </div>
+    <div class="result-img">
+      <h3>WrostModel Converted Speech Evaluation ROC Curve</h3>
+      <img src="WorstModel_converted_EER_1_0.5.png" alt="Converted SID">
+    </div>
+  </div>
+</section>
     <!-- Module 1 -->
     <section class="module" id="speechtripnet">
       <h2>SpeechTripNet</h2>
@@ -94,11 +472,13 @@
           <h3>Source Speaker</h3>
           <select id="stnSourceSelect"></select>
           <audio id="stnSourceAudio" controls></audio>
+          <div class="diag" id="stnDiagSrc"></div>
         </div>
         <div class="col">
           <h3>Target Speaker</h3>
           <select id="stnTargetSelect"></select>
           <audio id="stnTargetAudio" controls></audio>
+          <div class="diag" id="stnDiagTgt"></div>
         </div>
         <div class="col">
           <h3>Converted Speech</h3>
@@ -115,11 +495,13 @@
           <h3>Source Speaker</h3>
           <select id="baseSourceSelect"></select>
           <audio id="baseSourceAudio" controls></audio>
+          <div class="diag" id="baseDiagSrc"></div>
         </div>
         <div class="col">
           <h3>Target Speaker</h3>
           <select id="baseTargetSelect"></select>
           <audio id="baseTargetAudio" controls></audio>
+          <div class="diag" id="baseDiagTgt"></div>
         </div>
         <div class="col">
           <h3>Converted Speech</h3>
@@ -130,136 +512,204 @@
   </div>
 
 <script>
-function particleBackground(){
+/* ===== Simple lightbox for single-column gallery ===== */
+(function(){
+  const items = Array.from(document.querySelectorAll('#galleryList .gallery-item img'));
+  const lb = document.getElementById('lightbox');
+  const lbImg = document.getElementById('lbImg');
+  const lbCap = document.getElementById('lbCap');
+  const btnClose = document.getElementById('btnClose');
+  const btnDownload = document.getElementById('btnDownload');
+  const prev = document.getElementById('lbPrev');
+  const next = document.getElementById('lbNext');
+  let idx = -1;
+
+  function open(i){
+    idx = i;
+    const img = items[idx];
+    const full = img.dataset.full || img.src;
+    lbImg.src = full;
+    lbCap.textContent = img.alt || '';
+    lb.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+  function close(){
+    lb.classList.remove('open');
+    lbImg.src = '';
+    document.body.style.overflow = '';
+  }
+  function go(delta){
+    if (idx < 0) return;
+    idx = (idx + delta + items.length) % items.length;
+    open(idx);
+  }
+
+  items.forEach((img, i) => img.addEventListener('click', () => open(i)));
+  btnClose.addEventListener('click', close);
+  lb.addEventListener('click', e => { if (e.target === lb) close(); }); // 点击遮罩关闭
+  document.addEventListener('keydown', e => {
+    if (!lb.classList.contains('open')) return;
+    if (e.key === 'Escape') close();
+    if (e.key === 'ArrowLeft') go(-1);
+    if (e.key === 'ArrowRight') go(1);
+  });
+  prev.addEventListener('click', () => go(-1));
+  next.addEventListener('click', () => go(1));
+  btnDownload.addEventListener('click', () => {
+    if (!lbImg.src) return;
+    const a = document.createElement('a');
+    a.href = lbImg.src;
+    a.download = lbCap.textContent.replace(/\s+/g,'_') || 'figure';
+    document.body.appendChild(a); a.click(); a.remove();
+  });
+})();
+/* ===== Particle background (fixed) ===== */
+(function(){
   const c = document.getElementById('bg-canvas');
   const ctx = c.getContext('2d');
   let W,H,DPR, pts=[];
   const N=70, SPD=0.35, LINK=140;
-
-  function resize(){
-    DPR = Math.min(devicePixelRatio||1,2);
-    W = c.width  = Math.floor(innerWidth * DPR);
-    H = c.height = Math.floor(innerHeight * DPR);
-    c.style.width  = innerWidth + 'px';
-    c.style.height = innerHeight + 'px';
-  }
-  function rnd(a,b){return a + Math.random()*(b-a)}
-  function init(){
-    const palette = ["59,130,246","168,85,247","16,185,129"];
-    pts = Array.from({length:N},()=>({
-      x:rnd(0,W), y:rnd(0,H),
-      vx:rnd(-SPD,SPD), vy:rnd(-SPD,SPD),
-      r:rnd(1.5,2.5)*DPR, a:rnd(.25,.55),
-      color: palette[Math.floor(Math.random()*palette.length)]
-    }));
-  }
+  function resize(){ DPR=Math.min(devicePixelRatio||1,2); W=c.width=Math.floor(innerWidth*DPR); H=c.height=Math.floor(innerHeight*DPR); c.style.width=innerWidth+'px'; c.style.height=innerHeight+'px'; }
+  function rnd(a,b){return a+Math.random()*(b-a)}
+  function init(){ const pal=["59,130,246","168,85,247","16,185,129"]; pts=Array.from({length:N},()=>({x:rnd(0,W),y:rnd(0,H),vx:rnd(-SPD,SPD),vy:rnd(-SPD,SPD),r:rnd(1.5,2.5)*DPR,a:rnd(.25,.55),color:pal[Math.floor(Math.random()*pal.length)]})); }
   function step(){
     ctx.clearRect(0,0,W,H);
     for(let i=0;i<pts.length;i++){
       for(let j=i+1;j<pts.length;j++){
-        const a=pts[i], b=pts[j];
-        const dx=a.x-b.x, dy=a.y-b.y;
-        const d=Math.hypot(dx,dy);
-        if(d<LINK*DPR){
-          const alpha = 1 - d/(LINK*DPR);
-          ctx.strokeStyle = `rgba(120,120,120,${0.15*alpha})`;
-          ctx.lineWidth = 1;
-          ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.stroke();
-        }
+        const a=pts[i], b=pts[j]; const dx=a.x-b.x, dy=a.y-b.y; const d=Math.hypot(dx,dy);
+        if(d<LINK*DPR){ const alpha=1-d/(LINK*DPR); ctx.strokeStyle=`rgba(120,120,120,${0.15*alpha})`; ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.stroke(); }
       }
     }
-    for(const p of pts){
-      ctx.fillStyle = `rgba(${p.color},${p.a})`;
-      ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2); ctx.fill();
-      p.x += p.vx; p.y += p.vy;
-      if(p.x<0||p.x>W) p.vx *= -1;
-      if(p.y<0||p.y>H) p.vy *= -1;
-    }
+    for(const p of pts){ ctx.fillStyle=`rgba(${p.color},${p.a})`; ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2); ctx.fill(); p.x+=p.vx; p.y+=p.vy; if(p.x<0||p.x>W) p.vx*=-1; if(p.y<0||p.y>H) p.vy*=-1; }
     requestAnimationFrame(step);
   }
-  resize(); init(); step();
-  addEventListener('resize', resize);
-}
-particleBackground();
+  resize(); init(); step(); addEventListener('resize', resize);
+})();
 
-/* ===== Load audio from GitHub ===== */
+/* ===== GitHub API loader with optional PAT, caching, and shared lists ===== */
 (async function(){
   const GH = {
     owner: 'orangecat1219',
     repo:  'Contractive-Speechtripnet',
     branch:'main',
-    sourcePath: 'Data/source_speaker',
-    targetPath: 'Data/target_speaker'
+    srcDir:'Data/source_speaker',
+    tgtDir:'Data/target_speaker',
+    convSTN:'Data/baseline',                    // SpeechTripNet 转换目录
+    convBASE:'Data/converted_speech/1-0.7'     // Contrastive 转换目录
   };
 
-  const RAW_URL = (path) =>
-    `https://raw.githubusercontent.com/${GH.owner}/${GH.repo}/${GH.branch}/${path.split('/').map(encodeURIComponent).join('/')}`;
+  // ----- Token 设置（可选） -----
+  const tokenKey = 'gh_pat_v1';
+  const setTokenBtn = document.getElementById('setTokenBtn');
+  setTokenBtn.onclick = () => {
+    const cur = localStorage.getItem(tokenKey) || '';
+    const val = prompt('Paste your GitHub Personal Access Token (PAT):\n(leave empty to clear)', cur);
+    if (val === null) return;
+    if (val.trim()) localStorage.setItem(tokenKey, val.trim());
+    else localStorage.removeItem(tokenKey);
+    alert('Saved. Reload page to take effect.');
+  };
+  const getToken = () => localStorage.getItem(tokenKey) || '';
 
+  // ----- Helper -----
+  const RAW = (path) => `https://raw.githubusercontent.com/${GH.owner}/${GH.repo}/${GH.branch}/${path.split('/').map(encodeURIComponent).join('/')}`;
+  const CONTENTS = (dir) => `https://api.github.com/repos/${GH.owner}/${GH.repo}/contents/${encodeURIComponent(dir)}?ref=${encodeURIComponent(GH.branch)}`;
   const AUDIO_EXT = ['.wav','.mp3','.m4a','.flac','.ogg','.webm'];
-  const ext = (name)=> name.slice(name.lastIndexOf('.')).toLowerCase();
-  const noExt = (name)=> name.replace(/\.[^.]+$/,'');
-  const isAudio = (name)=> AUDIO_EXT.includes(ext(name));
-  const extractId = (filename)=> noExt(filename).replace(/^spk_/i,'');
+  const ext = n => n.slice(n.lastIndexOf('.')).toLowerCase();
+  const noExt = n => n.replace(/\.[^.]+$/,'');
+  const isAudio = n => AUDIO_EXT.includes(ext(n));
+  const extractId = n => noExt(n).replace(/^spk_/i,'');
 
-  async function listFiles(path){
-    const res = await fetch(`https://api.github.com/repos/${GH.owner}/${GH.repo}/contents/${encodeURIComponent(path)}`);
-    if(!res.ok) return [];
-    const items = await res.json();
-    return items.filter(x=>x.type==='file' && isAudio(x.name)).map(x=>({
-      label:x.name, url:x.download_url, name:x.name
-    }));
+  async function ghFetchJson(url){
+    const token = getToken();
+    const headers = { 'Accept':'application/vnd.github+json' };
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+    const res = await fetch(url, { headers, cache: 'no-store' });
+    const remained = res.headers.get('X-RateLimit-Remaining');
+    if (res.status === 403) {
+      const body = await res.text();
+      console.warn('GitHub API 403', body);
+      throw new Error(`GitHub API 403 (rate-limited or private). Remaining=${remained}`);
+    }
+    if (!res.ok) throw new Error(`GitHub API error ${res.status}`);
+    return res.json();
   }
 
-  function fillSelect(selectEl, files){
+  // 缓存：sessionStorage
+  async function listAudio(dir, cacheKey){
+    const cached = sessionStorage.getItem(cacheKey);
+    if (cached) try { return JSON.parse(cached); } catch {}
+    const items = await ghFetchJson(CONTENTS(dir));
+    const files = items.filter(x => x.type==='file' && isAudio(x.name))
+                       .map(x => ({ label:x.name, url:x.download_url, id: extractId(x.name) }));
+    sessionStorage.setItem(cacheKey, JSON.stringify(files));
+    return files;
+  }
+
+  function fillSelect(sel, files){
     const empty = `<option value="" data-id="">— Select —</option>`;
-    const opts  = files.map(f => `<option value="${f.url}" data-id="${extractId(f.name)}">${f.label}</option>`).join('');
-    selectEl.innerHTML = empty + opts;
-    selectEl.value="";
+    sel.innerHTML = empty + files.map(f=>`<option value="${f.url}" data-id="${f.id}">${f.label}</option>`).join('');
+    sel.value = "";
   }
 
-  function setConvertedAudio(cAud, bareName, folder){
-    if(!bareName){ cAud.src=''; cAud.load(); return; }
-    const wav = RAW_URL(`${folder}/${bareName}.wav`);
-    const mp3 = RAW_URL(`${folder}/${bareName}.mp3`);
-    cAud.onerror = null;
-    cAud.src = wav; cAud.load();
-    let triedWav = true;
-    cAud.onerror = () => {
-      if(triedWav){
-        triedWav=false;
-        cAud.onerror=null;
-        cAud.src=mp3; cAud.load();
-      }
-    };
+  function setConverted(audioEl, baseDir, bare, fallbacks=['wav','mp3']){
+    if(!bare){ audioEl.src=''; audioEl.load(); return; }
+    const ver = `?v=${Date.now()}`;
+    let i=0;
+    function next(){
+      if(i>=fallbacks.length) return;
+      const tryUrl = RAW(`${baseDir}/${bare}.${fallbacks[i++]}`)+ver;
+      audioEl.onerror = next;
+      audioEl.src = tryUrl; audioEl.load();
+    }
+    next();
   }
 
-  async function setupModule(prefix, convertedPath){
-    const sSel=document.getElementById(`${prefix}SourceSelect`);
-    const tSel=document.getElementById(`${prefix}TargetSelect`);
-    const sAud=document.getElementById(`${prefix}SourceAudio`);
-    const tAud=document.getElementById(`${prefix}TargetAudio`);
-    const cAud=document.getElementById(`${prefix}ConvertedAudio`);
+  async function setupBlock(prefix, convDir, diagSrcId, diagTgtId){
+    const sSel = document.getElementById(`${prefix}SourceSelect`);
+    const tSel = document.getElementById(`${prefix}TargetSelect`);
+    const sAud = document.getElementById(`${prefix}SourceAudio`);
+    const tAud = document.getElementById(`${prefix}TargetAudio`);
+    const cAud = document.getElementById(`${prefix}ConvertedAudio`);
+    const diagSrc = document.getElementById(diagSrcId);
+    const diagTgt = document.getElementById(diagTgtId);
 
-    const [srcFiles,tgtFiles]=await Promise.all([
-      listFiles(GH.sourcePath),
-      listFiles(GH.targetPath)
-    ]);
-    fillSelect(sSel,srcFiles);
-    fillSelect(tSel,tgtFiles);
-
-    function updateConverted(){
-      const sId=sSel.selectedOptions[0]?.dataset.id||'';
-      const tId=tSel.selectedOptions[0]?.dataset.id||'';
-      if(!sId||!tId){ setConvertedAudio(cAud,'',convertedPath); return; }
-      setConvertedAudio(cAud,`spk_${sId}__TO__spk_${tId}`,convertedPath);
+    try{
+      // 仅拉取一次，两个模块共用缓存
+      const [srcFiles, tgtFiles] = await Promise.all([
+        listAudio(GH.srcDir, 'cache_src_files'),
+        listAudio(GH.tgtDir, 'cache_tgt_files')
+      ]);
+      fillSelect(sSel, srcFiles);
+      fillSelect(tSel, tgtFiles);
+      diagSrc.textContent = `Loaded ${srcFiles.length} items`;
+      diagTgt.textContent = `Loaded ${tgtFiles.length} items`;
+    }catch(e){
+      console.error(e);
+      fillSelect(sSel, []); fillSelect(tSel, []);
+      diagSrc.textContent = '(failed) ' + e.message;
+      diagTgt.textContent = '(failed) ' + e.message;
     }
 
-    sSel.addEventListener('change',()=>{ sAud.src=sSel.value||''; sAud.load(); updateConverted(); });
-    tSel.addEventListener('change',()=>{ tAud.src=tSel.value||''; tAud.load(); updateConverted(); });
+    function updateConverted(){
+      const sId = sSel.selectedOptions[0]?.dataset.id || '';
+      const tId = tSel.selectedOptions[0]?.dataset.id || '';
+      if(!sId || !tId){ setConverted(cAud, convDir, ''); return; }
+      const bare = `spk_${sId}__TO__spk_${tId}`;
+      setConverted(cAud, convDir, bare);
+    }
+    sSel.onchange = ()=>{ sAud.src = sSel.value || ''; sAud.load(); updateConverted(); };
+    tSel.onchange = ()=>{ tAud.src = tSel.value || ''; tAud.load(); updateConverted(); };
+
+    // 初始清空
+    sAud.src=''; sAud.load();
+    tAud.src=''; tAud.load();
+    cAud.src=''; cAud.load();
   }
 
-  await setupModule('stn','Data/baseline');                // SpeechTripNet
-  await setupModule('base','Data/converted_speech/1-0.7'); // Contrastive
+  // 初始化两个模块
+  await setupBlock('stn',  GH.convSTN,  'stnDiagSrc',  'stnDiagTgt');   // SpeechTripNet -> Data/baseline
+  await setupBlock('base', GH.convBASE, 'baseDiagSrc', 'baseDiagTgt');  // Contrastive  -> Data/converted_speech/1-0.7
 })();
 </script>
 </body>
