@@ -512,18 +512,74 @@
   </div>
 
 <script>
-/* ===== Simple lightbox for single-column gallery ===== */
+// /* ===== Simple lightbox for single-column gallery ===== */
+// (function(){
+//   const items = Array.from(document.querySelectorAll('#galleryList .gallery-item img'));
+//   const lb = document.getElementById('lightbox');
+//   const lbImg = document.getElementById('lbImg');
+//   const lbCap = document.getElementById('lbCap');
+//   const btnClose = document.getElementById('btnClose');
+//   const btnDownload = document.getElementById('btnDownload');
+//   const prev = document.getElementById('lbPrev');
+//   const next = document.getElementById('lbNext');
+//   let idx = -1;
+
+//   function open(i){
+//     idx = i;
+//     const img = items[idx];
+//     const full = img.dataset.full || img.src;
+//     lbImg.src = full;
+//     lbCap.textContent = img.alt || '';
+//     lb.classList.add('open');
+//     document.body.style.overflow = 'hidden';
+//   }
+//   function close(){
+//     lb.classList.remove('open');
+//     lbImg.src = '';
+//     document.body.style.overflow = '';
+//   }
+//   function go(delta){
+//     if (idx < 0) return;
+//     idx = (idx + delta + items.length) % items.length;
+//     open(idx);
+//   }
+
+//   items.forEach((img, i) => img.addEventListener('click', () => open(i)));
+//   btnClose.addEventListener('click', close);
+//   lb.addEventListener('click', e => { if (e.target === lb) close(); }); // 点击遮罩关闭
+//   document.addEventListener('keydown', e => {
+//     if (!lb.classList.contains('open')) return;
+//     if (e.key === 'Escape') close();
+//     if (e.key === 'ArrowLeft') go(-1);
+//     if (e.key === 'ArrowRight') go(1);
+//   });
+//   prev.addEventListener('click', () => go(-1));
+//   next.addEventListener('click', () => go(1));
+//   btnDownload.addEventListener('click', () => {
+//     if (!lbImg.src) return;
+//     const a = document.createElement('a');
+//     a.href = lbImg.src;
+//     a.download = lbCap.textContent.replace(/\s+/g,'_') || 'figure';
+//     document.body.appendChild(a); a.click(); a.remove();
+//   });
+// })();
+/* ===== Simple lightbox (safe) ===== */
 (function(){
-  const items = Array.from(document.querySelectorAll('#galleryList .gallery-item img'));
+  const root = document.getElementById('galleryList');
   const lb = document.getElementById('lightbox');
+  if (!root || !lb) {            // 页面上没有画廊或没有lightbox容器，则跳过
+    console.info('[lightbox] disabled (no #galleryList or #lightbox)');
+    return;
+  }
+  const items = Array.from(root.querySelectorAll('.gallery-item img'));
   const lbImg = document.getElementById('lbImg');
   const lbCap = document.getElementById('lbCap');
   const btnClose = document.getElementById('btnClose');
   const btnDownload = document.getElementById('btnDownload');
   const prev = document.getElementById('lbPrev');
   const next = document.getElementById('lbNext');
-  let idx = -1;
 
+  let idx = -1;
   function open(i){
     idx = i;
     const img = items[idx];
@@ -533,36 +589,25 @@
     lb.classList.add('open');
     document.body.style.overflow = 'hidden';
   }
-  function close(){
-    lb.classList.remove('open');
-    lbImg.src = '';
-    document.body.style.overflow = '';
-  }
-  function go(delta){
-    if (idx < 0) return;
-    idx = (idx + delta + items.length) % items.length;
-    open(idx);
-  }
+  function close(){ lb.classList.remove('open'); lbImg.src=''; document.body.style.overflow=''; }
+  function go(d){ if (idx<0) return; idx=(idx+d+items.length)%items.length; open(idx); }
 
-  items.forEach((img, i) => img.addEventListener('click', () => open(i)));
-  btnClose.addEventListener('click', close);
-  lb.addEventListener('click', e => { if (e.target === lb) close(); }); // 点击遮罩关闭
-  document.addEventListener('keydown', e => {
-    if (!lb.classList.contains('open')) return;
-    if (e.key === 'Escape') close();
-    if (e.key === 'ArrowLeft') go(-1);
-    if (e.key === 'ArrowRight') go(1);
+  items.forEach((img,i)=> img.addEventListener('click', ()=> open(i)));
+  btnClose && btnClose.addEventListener('click', close);
+  lb.addEventListener('click', e=>{ if(e.target===lb) close(); });
+  document.addEventListener('keydown', e=>{ if(!lb.classList.contains('open')) return;
+    if(e.key==='Escape') close(); if(e.key==='ArrowLeft') go(-1); if(e.key==='ArrowRight') go(1);
   });
-  prev.addEventListener('click', () => go(-1));
-  next.addEventListener('click', () => go(1));
-  btnDownload.addEventListener('click', () => {
-    if (!lbImg.src) return;
-    const a = document.createElement('a');
-    a.href = lbImg.src;
-    a.download = lbCap.textContent.replace(/\s+/g,'_') || 'figure';
+  prev && prev.addEventListener('click', ()=> go(-1));
+  next && next.addEventListener('click', ()=> go(1));
+  btnDownload && btnDownload.addEventListener('click', ()=>{
+    if(!lbImg.src) return; const a=document.createElement('a');
+    a.href=lbImg.src; a.download=(lbCap.textContent||'figure').replace(/\s+/g,'_');
     document.body.appendChild(a); a.click(); a.remove();
   });
 })();
+
+
 /* ===== Particle background (fixed) ===== */
 (function(){
   const c = document.getElementById('bg-canvas');
@@ -612,8 +657,11 @@
   const getToken = () => localStorage.getItem(tokenKey) || '';
 
   // ----- Helper -----
+  
   const RAW = (path) => `https://raw.githubusercontent.com/${GH.owner}/${GH.repo}/${GH.branch}/${path.split('/').map(encodeURIComponent).join('/')}`;
-  const CONTENTS = (dir) => `https://api.github.com/repos/${GH.owner}/${GH.repo}/contents/${encodeURIComponent(dir)}?ref=${encodeURIComponent(GH.branch)}`;
+// 正确：只对每段做 encode，保留斜杠
+const CONTENTS = (dir) =>
+  `https://api.github.com/repos/${GH.owner}/${GH.repo}/contents/${dir.split('/').map(encodeURIComponent).join('/')}?ref=${encodeURIComponent(GH.branch)}`;
   const AUDIO_EXT = ['.wav','.mp3','.m4a','.flac','.ogg','.webm'];
   const ext = n => n.slice(n.lastIndexOf('.')).toLowerCase();
   const noExt = n => n.replace(/\.[^.]+$/,'');
